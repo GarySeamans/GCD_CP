@@ -1,29 +1,30 @@
 # First read in the activity labels
-activityLabels <- fread("UCI_HAR_Dataset/activity_labels.txt", drop = 1, col.names = "activity", data.table = FALSE)
+activityLabels <- read.table("UCI_HAR_Dataset/activity_labels.txt", col.names = c("","activity"))
 
 # Read in features
-features <- fread("UCI_HAR_Dataset/features.txt", drop = 1, col.names = "features", data.table = FALSE)
+features <- read.table("UCI_HAR_Dataset/features.txt")
 # Remove all features without mean or std in them
-cleanFeatures <- grepl("*mean*|*std*", features$features)
+cleanFeatures <- grepl("*mean*|*std*", features[,2])
 # Gather the list of features that meet the criteria
 tidyFeatures <- features[which(cleanFeatures),]
 
+
 # Make features more readable
-tidierFeatures <- gsub("-", "", tidyFeatures)
-tidierFeatures <- gsub("()", "", tidierFeatures)
+tidierFeatures <- gsub("-", "", tidyFeatures[,2])
+# Assign column names
 columnNames <- c("subject","activity",tidierFeatures)
 
 # Read test data
-Subject <- fread("UCI_HAR_Dataset/test/subject_test.txt", data.table = FALSE)
-Activity <- fread("UCI_HAR_Dataset/test/y_test.txt", data.table = FALSE)
-Measurments <- fread("UCI_HAR_Dataset/test/X_test.txt", data.table = FALSE)
+Subject <- read.table("UCI_HAR_Dataset/test/subject_test.txt")
+Activity <- read.table("UCI_HAR_Dataset/test/y_test.txt")
+Measurments <- read.table("UCI_HAR_Dataset/test/X_test.txt")
 testData <- cbind(Subject,Activity,Measurments)
 names(testData) <- columnNames
 
 # Read train data
-trainSubject <- fread("UCI_HAR_Dataset/train/subject_train.txt", data.table = FALSE)
-trainActivity <- fread("UCI_HAR_Dataset/train/y_train.txt", data.table = FALSE)
-trainMeasurments <- fread("UCI_HAR_Dataset/train/X_train.txt", data.table = FALSE)
+trainSubject <- read.table("UCI_HAR_Dataset/train/subject_train.txt")
+trainActivity <- read.table("UCI_HAR_Dataset/train/y_train.txt")
+trainMeasurments <- read.table("UCI_HAR_Dataset/train/X_train.txt")
 trainData <- cbind(trainSubject, trainActivity, trainMeasurments)
 names(trainData) <- columnNames
 
@@ -35,7 +36,12 @@ allData$subject <- as.factor(allData$subject)
 allData$activity <- as.factor(allData$activity)
 
 # Rename the activities to their appropriate descriptions
-levels(allData$activity) <- as.list(activityLabels)[[1]]
+levels(allData$activity) <- gsub("1", "Walking", levels(allData$activity))
+levels(allData$activity) <- gsub("2", "Walking_Upstairs", levels(allData$activity))
+levels(allData$activity) <- gsub("3", "Walking_Downstairs", levels(allData$activity))
+levels(allData$activity) <- gsub("4", "Sitting", levels(allData$activity))
+levels(allData$activity) <- gsub("5", "Standing", levels(allData$activity))
+levels(allData$activity) <- gsub("6", "Laying", levels(allData$activity))
 
 # Create a tidy dataset with the average of each variable
 tidyTable <- aggregate(.~subject+activity, allData, mean)
